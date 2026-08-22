@@ -1,0 +1,73 @@
+{
+  "id": "SapIdocGuardEnterprisePortfolio1",
+  "name": "415 · IDoc Guard · ENTERPRISE · Atlantic Retail Order Portfolio",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "a2a54c7e-52bd-44fd-9eb5-e7a0b3c10001",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const portfolio = [\n  { code: 'R01', scenario: 'Core store replenishment', ref: 'ATLR-20260822-101', date: '20260915', items: [['TG11', 20], ['TG12', 12]] },\n  { code: 'R02', scenario: 'Urgent low-volume restock', ref: 'ATLR-20260822-102', date: '20260825', items: [['TG11', 5]] },\n  { code: 'R03', scenario: 'High-volume availability risk', ref: 'ATLR-20260822-103', date: '20260901', items: [['TG11', 150]] },\n  { code: 'R04', scenario: 'Third-party fulfilment', ref: 'ATLR-20260822-104', date: '20260920', items: [['TG10', 2], ['TG13', 3]] },\n  { code: 'R05', scenario: 'Serialized goods order', ref: 'ATLR-20260822-105', date: '20260918', items: [['TG20', 4]] },\n  { code: 'R06', scenario: 'FIFO batch replenishment', ref: 'ATLR-20260822-106', date: '20260922', items: [['TG21', 30]] },\n  { code: 'R07', scenario: 'Expiry-managed batch order', ref: 'ATLR-20260822-107', date: '20260922', items: [['TG22', 18]] },\n  { code: 'R08', scenario: 'Advanced shipping and receiving', ref: 'ATLR-20260822-108', date: '20260925', items: [['TG24', 6], ['TG25', 8]] },\n  { code: 'R09', scenario: 'Mixed traceability basket', ref: 'ATLR-20260822-109', date: '20260928', items: [['TG11', 5], ['TG12', 5], ['TG20', 1], ['TG21', 10], ['TG22', 10]] },\n  { code: 'R10', scenario: 'Seasonal bought-in assortment', ref: 'ATLR-20260822-110', date: '20261005', items: [['TG14', 7], ['TG24', 3]] },\n  { code: 'R11', scenario: 'Reorder-point recovery', ref: 'ATLR-20260822-111', date: '20260930', items: [['TG12', 40]] },\n  { code: 'R12', scenario: 'Priority customer mixed order', ref: 'ATLR-20260822-112', date: '20260827', items: [['TG11', 1], ['TG20', 1], ['TG25', 1]] },\n  { code: 'E01', scenario: 'Unknown sold-to party', ref: 'ATLR-20260822-201', date: '20260915', customer: '0099999999', expected: 'application_error', items: [['TG11', 2]] },\n  { code: 'E02', scenario: 'Unknown material', ref: 'ATLR-20260822-202', date: '20260915', expected: 'application_error', items: [['INVALID-415', 2]] },\n  { code: 'E03', scenario: 'Invalid sales area', ref: 'ATLR-20260822-203', date: '20260915', salesOrg: '9999', channel: '99', division: '99', expected: 'application_error', items: [['TG11', 2]] },\n  { code: 'E04', scenario: 'Invalid ISO unit', ref: 'ATLR-20260822-204', date: '20260915', expected: 'application_error', items: [['TG11', 2, 'XXX']] },\n];\nconst xmlEscape = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(\"'\", '&apos;');\nconst control = `<EDI_DC40 SEGMENT='1'><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40>`;\nreturn portfolio.map((order) => {\n  const customer = order.customer ?? '0017100001';\n  const salesOrg = order.salesOrg ?? '1710';\n  const channel = order.channel ?? '10';\n  const division = order.division ?? '00';\n  const itemXml = order.items.map(([material, quantity, unit = 'PCE'], index) => {\n    const position = String((index + 1) * 10).padStart(6, '0');\n    return `<E1EDP01 SEGMENT='1'><POSEX>${position}</POSEX><MENGE>${quantity}</MENGE><MENEE>${unit}</MENEE><E1EDP19 SEGMENT='1'><QUALF>002</QUALF><IDTNR>${xmlEscape(material)}</IDTNR></E1EDP19><E1EDP20 SEGMENT='1'><WMENG>${quantity}</WMENG><EDATU>${order.date}</EDATU></E1EDP20></E1EDP01>`;\n  }).join('');\n  const idocXml = `<ORDERS05><IDOC BEGIN='1'>${control}<E1EDK01 SEGMENT='1'><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT='1'><QUALF>006</QUALF><ORGID>${division}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>007</QUALF><ORGID>${channel}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>008</QUALF><ORGID>${salesOrg}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>012</QUALF><ORGID>OR1</ORGID></E1EDK14><E1EDK03 SEGMENT='1'><IDDAT>002</IDDAT><DATUM>${order.date}</DATUM></E1EDK03><E1EDKA1 SEGMENT='1'><PARVW>AG</PARVW><PARTN>${customer}</PARTN></E1EDKA1><E1EDK02 SEGMENT='1'><QUALF>001</QUALF><BELNR>${order.ref}</BELNR><DATUM>20260822</DATUM></E1EDK02>${itemXml}</IDOC></ORDERS05>`;\n  const businessKey = `A4H250-ATLR-${order.code}-20260822-v1`;\n  return { json: { businessKey, idempotencyKey: businessKey, writeConfirmation: `SEND submitPurchaseOrderIdoc ${businessKey}`, scenarioCode: order.code, scenario: order.scenario, businessRef: order.ref, expected: order.expected ?? 'application_success', customer, salesArea: `${salesOrg}/${channel}/${division}`, requestedDate: order.date, itemCount: order.items.length, items: order.items.map(([material, quantity, unit = 'PCE']) => ({ material, quantity, unit })), idocXml } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0],
+      "id": "a2a54c7e-52bd-44fd-9eb5-e7a0b3c10002",
+      "name": "Build 16 Enterprise ORDERS05"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "={{ $json.idocXml }}",
+        "idempotencyKey": "={{ $json.idempotencyKey }}",
+        "writeConfirmation": "={{ $json.writeConfirmation }}",
+        "correlationId": "a4h250-atlantic-retail-portfolio"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [640, 0],
+      "id": "a2a54c7e-52bd-44fd-9eb5-e7a0b3c10003",
+      "name": "Submit Enterprise Portfolio"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "={{ $json.idempotencyKey }}",
+        "correlationId": "a4h250-atlantic-retail-status"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [980, 0],
+      "id": "a2a54c7e-52bd-44fd-9eb5-e7a0b3c10004",
+      "name": "Reconcile Transport Receipts"
+    },
+    {
+      "parameters": {
+        "content": "## Atlantic Retail Distribution · enterprise IDoc portfolio\n\nCreates sixteen structurally complete `ORDERS05` documents against A4H/250. Twelve represent realistic retail and distribution scenarios; four are deliberate SAP application exceptions.\n\nThe portfolio covers standard replenishment, urgent demand, shortage risk, third-party fulfilment, serial numbers, FIFO batches, expiry-managed batches, advanced shipping and mixed baskets. Technical values remain in English and use live SAP master data."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -360],
+      "id": "a2a54c7e-52bd-44fd-9eb5-e7a0b3c10005",
+      "name": "Enterprise Scenario"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Build 16 Enterprise ORDERS05", "type": "main", "index": 0}]]},
+    "Build 16 Enterprise ORDERS05": {"main": [[{"node": "Submit Enterprise Portfolio", "type": "main", "index": 0}]]},
+    "Submit Enterprise Portfolio": {"main": [[{"node": "Reconcile Transport Receipts", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

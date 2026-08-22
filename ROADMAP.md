@@ -10,7 +10,7 @@
 - Durable submission and inbound state.
 - Registered JCo IDoc server with durable tRFC TID callbacks.
 - TLS/bearer API and fake-transport Java tests.
-- Self-hosted installation verified on n8n 2.33.5 with four inactive examples,
+- Self-hosted installation verified on n8n 2.33.5 with ten inactive examples,
   private contract fixture and positive/negative execution evidence.
 - Licensed JCo 3.1.13 and JIDocLib 3.1.4 loaded on target Linux x86-64.
 - Real ORDERS05 outbound tRFC transport verified against A4H client 250, with

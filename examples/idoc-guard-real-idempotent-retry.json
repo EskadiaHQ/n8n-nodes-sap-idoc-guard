@@ -1,0 +1,79 @@
+{
+  "id": "SapIdocGuardRealIdempotency1",
+  "name": "415 · IDoc Guard · REAL SAP · Idempotent Retry",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "77eebcda-c92d-416f-bd53-248c9c174221",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40><E1EDK01 SEGMENT=\"1\"><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT=\"1\"><QUALF>006</QUALF><ORGID>00</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>007</QUALF><ORGID>10</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>008</QUALF><ORGID>1710</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>012</QUALF><ORGID>OR1</ORGID></E1EDK14><E1EDK03 SEGMENT=\"1\"><IDDAT>002</IDDAT><DATUM>20260918</DATUM></E1EDK03><E1EDKA1 SEGMENT=\"1\"><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDK02 SEGMENT=\"1\"><QUALF>001</QUALF><BELNR>ATLR-DEMO-RETRY-20260822</BELNR><DATUM>20260822</DATUM></E1EDK02><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>1</MENGE><MENEE>PCE</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>TG11</IDTNR></E1EDP19><E1EDP20 SEGMENT=\"1\"><WMENG>1</WMENG><EDATU>20260918</EDATU></E1EDP20></E1EDP01></IDOC></ORDERS05>",
+        "idempotencyKey": "A4H250-ORDERS05-RETRY-20260822-v2",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc A4H250-ORDERS05-RETRY-20260822-v2",
+        "correlationId": "a4h250-orders05-first-attempt"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [320, 0],
+      "id": "71382255-b935-4519-aee5-1dd1e1c84222",
+      "name": "Submit First Attempt"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40><E1EDK01 SEGMENT=\"1\"><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT=\"1\"><QUALF>006</QUALF><ORGID>00</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>007</QUALF><ORGID>10</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>008</QUALF><ORGID>1710</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>012</QUALF><ORGID>OR1</ORGID></E1EDK14><E1EDK03 SEGMENT=\"1\"><IDDAT>002</IDDAT><DATUM>20260918</DATUM></E1EDK03><E1EDKA1 SEGMENT=\"1\"><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDK02 SEGMENT=\"1\"><QUALF>001</QUALF><BELNR>ATLR-DEMO-RETRY-20260822</BELNR><DATUM>20260822</DATUM></E1EDK02><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>1</MENGE><MENEE>PCE</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>TG11</IDTNR></E1EDP19><E1EDP20 SEGMENT=\"1\"><WMENG>1</WMENG><EDATU>20260918</EDATU></E1EDP20></E1EDP01></IDOC></ORDERS05>",
+        "idempotencyKey": "A4H250-ORDERS05-RETRY-20260822-v2",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc A4H250-ORDERS05-RETRY-20260822-v2",
+        "correlationId": "a4h250-orders05-identical-retry"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [650, 0],
+      "id": "26a0cbe5-9dd9-445c-b78c-597547524223",
+      "name": "Retry Identical Payload"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "A4H250-ORDERS05-RETRY-20260822-v2",
+        "correlationId": "a4h250-orders05-retry-status"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [980, 0],
+      "id": "f624543f-18b8-4fc9-b815-a06b91164224",
+      "name": "Read Original Receipt"
+    },
+    {
+      "parameters": {
+        "content": "## One transport, two submissions\n\nBoth submit nodes use exactly the same business key and XML. The first call may create one SAP IDoc; the second must return the original request and TID with `duplicate=true` without opening another tRFC transaction.\n\nA changed body under the same key is rejected instead of being treated as a retry."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -330],
+      "id": "e9d173bc-59c5-408a-ae6d-34c2fe894225",
+      "name": "Idempotency Contract"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Submit First Attempt", "type": "main", "index": 0}]]},
+    "Submit First Attempt": {"main": [[{"node": "Retry Identical Payload", "type": "main", "index": 0}]]},
+    "Retry Identical Payload": {"main": [[{"node": "Read Original Receipt", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

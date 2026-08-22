@@ -40,17 +40,57 @@ have the SAP Basis/ALE owner approve the final design.
 - Inbound rollback produces no inbox item; commit produces exactly one.
 - SAP-side application result is checked independently from transport success.
 
-## Verified A4H/250 baseline — 2026-08-22
+## Verified A4H/250 application baseline — 2026-08-22
 
 - Runtime: SAP JCo 3.1.13 plus SAP JIDocLib 3.1.4 on Linux x86-64.
-- Outbound type: `ORDERS` / `ORDERS05`, sender `LS/N8NIDOC`, receiver
-  `LS/A4HCLNT250`, port `SAPA4H`.
-- Result: tRFC confirmed with TID `383E0458C4206A897921000B`; SAP created IDoc
-  `198012` with four segments.
-- SAP application state: 56, message `EDI: Partner profile does not exist`.
-- Retry result: same idempotency key and payload returned the original receipt
-  with `duplicate=true` in 2 ms; EDIDC still contained exactly one IDoc.
+- Message contract: `ORDERS` / `ORDERS05`, sender `LS/N8NIDOC`, receiver
+  `LS/A4HCLNT250`, receiver port `SAPA4H`.
+- BD54 logical system: `N8NIDOC`.
+- WE20 inbound partner: type `LS`, partner `N8NIDOC`, message `ORDERS`, process
+  code `ORDE`, immediate processing, post-processing user `IVANHOCK`.
+- Workbench request: `A4HK900173`.
+- The initial pre-WE20 transport created IDoc `198012` and demonstrated the
+  expected status-56 boundary.
+- The first complete post-WE20 payload created IDoc `198016`, status 53, and SD
+  sales order `0000000005`.
+- The enterprise acceptance created IDocs `198017–198042`: 20 status-53 results
+  with sales orders and six status-51 business/configuration errors.
+- Exact retries of 16 portfolio cases and five replenishment waves returned the
+  original receipts with `duplicate=true`; the maximum DOCNUM did not change.
 
-The next Basis action is to create and approve the exact inbound WE20 profile
-for logical-system partner `N8NIDOC`, message `ORDERS`, and the intended process
-code. Do not bypass ALE customizing with direct table writes.
+## Application-ready ORDERS05 fields
+
+The receiver requires more than a minimal transport fixture:
+
+- `E1EDK14/QUALF 006`: division;
+- `E1EDK14/QUALF 007`: distribution channel;
+- `E1EDK14/QUALF 008`: sales organization;
+- `E1EDK14/QUALF 012`: sales document type;
+- `E1EDK03/IDDAT 002`: requested delivery date;
+- `E1EDKA1/PARVW AG`: sold-to party;
+- `E1EDK02/QUALF 001`: external order reference, limited to 20 characters by
+  the target `BSTNK` field;
+- `E1EDP19/QUALF 002`: material number;
+- `E1EDP20`: schedule quantity and date;
+- `MENEE=PCE`: ISO unit. `ST` is the internal SAP unit and is rejected as an
+  inbound ISO code in this system.
+
+Do not force `CURCY` in the accepted A4H/250 examples. The inbound conversion
+rejected supplied ISO currency values; allowing SAP to derive currency from the
+customer and sales area produced the expected USD documents.
+
+## Operational checks
+
+| Check | Transaction / evidence | Expected result |
+|---|---|---|
+| Partner configuration | WE20 | `LS/N8NIDOC`, inbound `ORDERS`, `ORDE` |
+| IDoc persistence | WE02 or WE05 | sender `N8NIDOC`, basic type `ORDERS05` |
+| Application success | IDoc status records | final status 53 |
+| Application error | IDoc status records | status 51 plus message variables |
+| Sales document | VA03 | order, customer, reference, date and items |
+| Search by reference | VA05 | customer purchase-order reference |
+| Controlled reprocessing | BD87 | reprocess the existing status-51 IDoc |
+
+Do not create a new idempotency key merely to bypass a functional error. First
+reconcile the original IDoc; correct master data/customizing and use BD87 when
+the existing document is the intended business message.

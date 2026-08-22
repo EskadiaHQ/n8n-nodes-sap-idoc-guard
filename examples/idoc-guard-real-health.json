@@ -1,0 +1,46 @@
+{
+  "id": "SapIdocGuardRealHealth1",
+  "name": "415 · IDoc Guard · REAL SAP · Runtime Readiness",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "d9525f99-4e8f-4a13-b27d-12b4d8cb4201",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "connection",
+        "operation": "testConnection",
+        "correlationId": "a4h250-idoc-readiness-example"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [340, 0],
+      "id": "ac127c4f-74e3-4e88-a56c-c1bb446a4202",
+      "name": "Verify Governed IDoc Runtime"
+    },
+    {
+      "parameters": {
+        "content": "## Read-only runtime readiness\n\nThis example verifies authenticated HTTPS, the governed JIDoc capability and the minimized SAP backend identity. It does not submit or acknowledge an IDoc.\n\nExpected backend: `A4H`, client `250`, release `754`, source `sap-jidoclib`."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -260],
+      "id": "d8f66ba5-3874-4895-adf7-3c551f844203",
+      "name": "Readiness Evidence"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [[{"node": "Verify Governed IDoc Runtime", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

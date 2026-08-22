@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.8 - 2026-08-22
+
+- Adopt the approved high-resolution Logali Guard family artwork for the IDoc node and credential.
+- Show a structured document moving outbound with a single rightward send arrow.
+- Preserve the validated `0.1.6`/`0.1.7` example and cache work while publishing it coherently.
+
+## 0.1.7 - 2026-08-22
+
+- Keep the Logali family mark and document glyph identical in light and dark mode.
+- Version the icon filenames to invalidate stale n8n and browser caches.
+
+## 0.1.6 - 2026-08-22
+
+- Expand the executable example bank from four to ten inactive workflows.
+- Add real read-only readiness and three-reference status reconciliation.
+- Add a real multi-item ORDERS05 built from verified A4H/250 master data.
+- Add a real two-call idempotency demonstration that creates at most one tRFC
+  transport for an exact business key and payload.
+- Add fixture-only governance rejection and inbound retry-decision examples.
+
 ## 0.1.5 - 2026-08-22
 
 - Align the SAP IDoc Guard node icon with the Logali HANA Guard and SAP RFC Guard visual family.

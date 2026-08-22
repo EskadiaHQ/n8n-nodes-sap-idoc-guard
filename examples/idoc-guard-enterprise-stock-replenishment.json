@@ -1,0 +1,81 @@
+{
+  "id": "SapIdocGuardEnterpriseReplenishment1",
+  "name": "415 · IDoc Guard · ENTERPRISE · Stock Replenishment Engine",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000301",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const snapshot = [\n  { material: 'TG11', description: 'Regular trading', handlingPolicy: 'STANDARD', onHand: 8, reorderPoint: 25, targetStock: 60, openDemand: 12 },\n  { material: 'TG12', description: 'Reorder-point trading', handlingPolicy: 'STANDARD', onHand: 3, reorderPoint: 20, targetStock: 50, openDemand: 8 },\n  { material: 'TG20', description: 'Serialized goods', handlingPolicy: 'SERIAL', onHand: 1, reorderPoint: 4, targetStock: 10, openDemand: 2 },\n  { material: 'TG21', description: 'FIFO batch goods', handlingPolicy: 'BATCH_FIFO', onHand: 4, reorderPoint: 12, targetStock: 30, openDemand: 6 },\n  { material: 'TG22', description: 'Expiry-managed batch goods', handlingPolicy: 'BATCH_EXPIRY', onHand: 2, reorderPoint: 10, targetStock: 24, openDemand: 8 },\n  { material: 'TG24', description: 'Advanced receiving goods', handlingPolicy: 'ADVANCED_RECEIVING', onHand: 0, reorderPoint: 5, targetStock: 12, openDemand: 4 },\n  { material: 'TG25', description: 'Advanced receiving goods', handlingPolicy: 'ADVANCED_RECEIVING', onHand: 2, reorderPoint: 6, targetStock: 15, openDemand: 3 },\n];\nreturn snapshot.map((row) => {\n  const projectedAvailable = row.onHand - row.openDemand;\n  const shouldReplenish = projectedAvailable < row.reorderPoint;\n  const proposedQuantity = shouldReplenish ? Math.max(1, row.targetStock - projectedAvailable) : 0;\n  const risk = projectedAvailable <= 0 ? 'CRITICAL' : projectedAvailable < row.reorderPoint / 2 ? 'HIGH' : 'MEDIUM';\n  return { json: { ...row, projectedAvailable, shouldReplenish, proposedQuantity, risk, decisionRule: 'targetStock - (onHand - openDemand)' } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000302",
+      "name": "Calculate Replenishment Proposals"
+    },
+    {
+      "parameters": {
+        "jsCode": "const proposals = $input.all().map((item) => item.json).filter((row) => row.shouldReplenish);\nconst groups = [\n  { code: 'STD', ref: 'ATLR-20260822-301', date: '20260910', policies: ['STANDARD'] },\n  { code: 'SER', ref: 'ATLR-20260822-302', date: '20260912', policies: ['SERIAL'] },\n  { code: 'FIFO', ref: 'ATLR-20260822-303', date: '20260914', policies: ['BATCH_FIFO'] },\n  { code: 'EXP', ref: 'ATLR-20260822-304', date: '20260914', policies: ['BATCH_EXPIRY'] },\n  { code: 'ASR', ref: 'ATLR-20260822-305', date: '20260916', policies: ['ADVANCED_RECEIVING'] },\n];\nconst escapeXml = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(\"'\", '&apos;');\nconst control = `<EDI_DC40 SEGMENT='1'><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40>`;\nreturn groups.map((group) => {\n  const lines = proposals.filter((row) => group.policies.includes(row.handlingPolicy));\n  const itemXml = lines.map((row, index) => {\n    const position = String((index + 1) * 10).padStart(6, '0');\n    return `<E1EDP01 SEGMENT='1'><POSEX>${position}</POSEX><MENGE>${row.proposedQuantity}</MENGE><MENEE>PCE</MENEE><E1EDP19 SEGMENT='1'><QUALF>002</QUALF><IDTNR>${escapeXml(row.material)}</IDTNR></E1EDP19><E1EDP20 SEGMENT='1'><WMENG>${row.proposedQuantity}</WMENG><EDATU>${group.date}</EDATU></E1EDP20></E1EDP01>`;\n  }).join('');\n  const idocXml = `<ORDERS05><IDOC BEGIN='1'>${control}<E1EDK01 SEGMENT='1'><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT='1'><QUALF>006</QUALF><ORGID>00</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>007</QUALF><ORGID>10</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>008</QUALF><ORGID>1710</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>012</QUALF><ORGID>OR1</ORGID></E1EDK14><E1EDK03 SEGMENT='1'><IDDAT>002</IDDAT><DATUM>${group.date}</DATUM></E1EDK03><E1EDKA1 SEGMENT='1'><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDK02 SEGMENT='1'><QUALF>001</QUALF><BELNR>${group.ref}</BELNR><DATUM>20260822</DATUM></E1EDK02>${itemXml}</IDOC></ORDERS05>`;\n  const businessKey = `A4H250-ATLR-REPL-${group.code}-20260822-v1`;\n  return { json: { idempotencyKey: businessKey, writeConfirmation: `SEND submitPurchaseOrderIdoc ${businessKey}`, replenishmentWave: group.code, businessRef: group.ref, requestedDate: group.date, decisionCount: lines.length, totalQuantity: lines.reduce((sum, row) => sum + row.proposedQuantity, 0), highestRisk: lines.some((row) => row.risk === 'CRITICAL') ? 'CRITICAL' : 'HIGH', items: lines, idocXml } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [610, 0],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000303",
+      "name": "Build Replenishment Waves"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "={{ $json.idocXml }}",
+        "idempotencyKey": "={{ $json.idempotencyKey }}",
+        "writeConfirmation": "={{ $json.writeConfirmation }}",
+        "correlationId": "a4h250-atlantic-retail-replenishment"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [930, 0],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000304",
+      "name": "Submit Replenishment IDocs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const receipts = $input.all().map((item) => item.json);\nreturn [{ json: { scenario: 'Atlantic Retail automatic replenishment', transportReceipts: receipts.length, accepted: receipts.filter((r) => r.status === 'accepted' || r.status === 'transport_confirmed').length, duplicates: receipts.filter((r) => r.duplicate === true).length, requests: receipts.map((r) => ({ idempotencyKey: r.idempotencyKey, requestId: r.requestId, status: r.status, duplicate: r.duplicate ?? false, tid: r.tid ?? '' })), nextControl: 'Verify SAP application status 53 and the generated sales order by business reference.' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 0],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000305",
+      "name": "Summarize Replenishment Dispatch"
+    },
+    {
+      "parameters": {
+        "content": "## Enterprise pattern: demand-driven replenishment\n\nThis workflow turns a stock snapshot into calculated replenishment proposals, groups them by handling policy and creates five complete `ORDERS05` messages. The decision is explainable (`target stock - projected availability`), retries are idempotent and each wave carries a purchase-order reference that can be reconciled in SAP.\n\nIt covers regular stock, serial numbers, FIFO batches, expiry-controlled batches and advanced receiving with the real A4H/250 product catalog."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -380],
+      "id": "d20fe1e0-c1c8-4a0c-91c2-415000000306",
+      "name": "Replenishment Business Case"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Calculate Replenishment Proposals", "type": "main", "index": 0}]]},
+    "Calculate Replenishment Proposals": {"main": [[{"node": "Build Replenishment Waves", "type": "main", "index": 0}]]},
+    "Build Replenishment Waves": {"main": [[{"node": "Submit Replenishment IDocs", "type": "main", "index": 0}]]},
+    "Submit Replenishment IDocs": {"main": [[{"node": "Summarize Replenishment Dispatch", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}
