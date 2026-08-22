@@ -1,0 +1,129 @@
+{
+  "id": "SapIdocGuardEnterpriseB2bApi1",
+  "name": "415 · IDoc Guard · ENTERPRISE · B2B Order Intake API",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "415/atlantic-retail/b2b-orders",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000401",
+      "name": "Receive B2B Order",
+      "webhookId": "415-atlantic-retail-b2b-order"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $json.body ?? $json;\nconst allowedMaterials = new Set(['TG11', 'TG12', 'TG20', 'TG21', 'TG22', 'TG24', 'TG25']);\nconst errors = [];\nconst orderReference = String(source.orderReference ?? '').trim();\nconst customer = String(source.customer ?? '').trim();\nconst requestedDate = String(source.requestedDate ?? '').replaceAll('-', '');\nconst items = Array.isArray(source.items) ? source.items : [];\nif (!/^[A-Z0-9-]{6,20}$/.test(orderReference)) errors.push('orderReference must contain 6-20 uppercase letters, numbers or hyphens because SAP BSTNK is limited to 20 characters');\nif (!/^\\d{10}$/.test(customer)) errors.push('customer must contain exactly 10 digits');\nif (!/^\\d{8}$/.test(requestedDate)) errors.push('requestedDate must use YYYY-MM-DD or YYYYMMDD');\nif (items.length < 1 || items.length > 25) errors.push('items must contain between 1 and 25 lines');\nconst normalizedItems = items.map((line, index) => {\n  const material = String(line.material ?? '').trim().toUpperCase();\n  const quantity = Number(line.quantity);\n  if (!allowedMaterials.has(material)) errors.push(`items[${index}].material is not in the approved A4H/250 catalog`);\n  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 9999) errors.push(`items[${index}].quantity must be an integer from 1 to 9999`);\n  return { material, quantity, unit: 'PCE' };\n});\nreturn [{ json: { valid: errors.length === 0, errors, order: { orderReference, customer, requestedDate, salesOrg: '1710', channel: '10', division: '00', orderType: 'OR1', items: normalizedItems }, receivedAt: new Date().toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 0],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000402",
+      "name": "Validate Business Order"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "order-valid",
+              "leftValue": "={{ $json.valid }}",
+              "operator": {"operation": "true", "type": "boolean", "singleValue": true},
+              "rightValue": ""
+            }
+          ],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [550, 0],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000403",
+      "name": "Order Valid?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = $json.order;\nconst escapeXml = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll(\"'\", '&apos;');\nconst control = `<EDI_DC40 SEGMENT='1'><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40>`;\nconst itemXml = order.items.map((line, index) => {\n  const position = String((index + 1) * 10).padStart(6, '0');\n  return `<E1EDP01 SEGMENT='1'><POSEX>${position}</POSEX><MENGE>${line.quantity}</MENGE><MENEE>PCE</MENEE><E1EDP19 SEGMENT='1'><QUALF>002</QUALF><IDTNR>${escapeXml(line.material)}</IDTNR></E1EDP19><E1EDP20 SEGMENT='1'><WMENG>${line.quantity}</WMENG><EDATU>${order.requestedDate}</EDATU></E1EDP20></E1EDP01>`;\n}).join('');\nconst idocXml = `<ORDERS05><IDOC BEGIN='1'>${control}<E1EDK01 SEGMENT='1'><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT='1'><QUALF>006</QUALF><ORGID>${order.division}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>007</QUALF><ORGID>${order.channel}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>008</QUALF><ORGID>${order.salesOrg}</ORGID></E1EDK14><E1EDK14 SEGMENT='1'><QUALF>012</QUALF><ORGID>${order.orderType}</ORGID></E1EDK14><E1EDK03 SEGMENT='1'><IDDAT>002</IDDAT><DATUM>${order.requestedDate}</DATUM></E1EDK03><E1EDKA1 SEGMENT='1'><PARVW>AG</PARVW><PARTN>${order.customer}</PARTN></E1EDKA1><E1EDK02 SEGMENT='1'><QUALF>001</QUALF><BELNR>${escapeXml(order.orderReference)}</BELNR><DATUM>20260822</DATUM></E1EDK02>${itemXml}</IDOC></ORDERS05>`;\nconst idempotencyKey = `A4H250-B2B-${order.orderReference}-v1`;\nreturn [{ json: { ...$json, idempotencyKey, writeConfirmation: `SEND submitPurchaseOrderIdoc ${idempotencyKey}`, idocXml } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [830, -110],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000404",
+      "name": "Build Complete ORDERS05"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "={{ $json.idocXml }}",
+        "idempotencyKey": "={{ $json.idempotencyKey }}",
+        "writeConfirmation": "={{ $json.writeConfirmation }}",
+        "correlationId": "a4h250-atlantic-retail-b2b-api"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [1130, -110],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000405",
+      "name": "Submit B2B Order to SAP"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.status, requestId: $json.requestId, idempotencyKey: $json.idempotencyKey, duplicate: $json.duplicate ?? false, transportId: $json.tid ?? '', messageType: $json.messageType, basicType: $json.basicType, nextControl: 'Reconcile SAP application status 53 by orderReference.' }) }}",
+        "options": {
+          "responseCode": 202,
+          "responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1430, -110],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000406",
+      "name": "Respond Accepted"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'rejected', errors: $json.errors, receivedAt: $json.receivedAt }) }}",
+        "options": {
+          "responseCode": 422,
+          "responseHeaders": {"entries": [{"name": "Content-Type", "value": "application/json"}]}
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [830, 160],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000407",
+      "name": "Respond Validation Error"
+    },
+    {
+      "parameters": {
+        "content": "## Enterprise pattern: partner order API\n\nA partner sends a business JSON document. The workflow validates the contract and approved SAP catalog, converts the order into a complete `ORDERS05`, submits it with an idempotency key derived from the external order reference and returns HTTP 202 with a traceable transport receipt.\n\nRepeated delivery of the same body is safe. A changed body under the same reference is rejected by the idempotency contract."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -390],
+      "id": "4b2ba880-dc4c-45ef-a23c-415000000408",
+      "name": "B2B Integration Pattern"
+    }
+  ],
+  "connections": {
+    "Receive B2B Order": {"main": [[{"node": "Validate Business Order", "type": "main", "index": 0}]]},
+    "Validate Business Order": {"main": [[{"node": "Order Valid?", "type": "main", "index": 0}]]},
+    "Order Valid?": {"main": [[{"node": "Build Complete ORDERS05", "type": "main", "index": 0}], [{"node": "Respond Validation Error", "type": "main", "index": 0}]]},
+    "Build Complete ORDERS05": {"main": [[{"node": "Submit B2B Order to SAP", "type": "main", "index": 0}]]},
+    "Submit B2B Order to SAP": {"main": [[{"node": "Respond Accepted", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

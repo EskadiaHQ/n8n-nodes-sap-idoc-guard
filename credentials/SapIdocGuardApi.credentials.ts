@@ -5,7 +5,7 @@ export class SapIdocGuardApi implements ICredentialType {
 
 	displayName = 'Logali SAP IDoc Guard API';
 
-	icon = 'file:sapIdocGuardCredential.svg' as const;
+	icon = 'file:sapIdocGuardCredential-v018.svg' as const;
 
 	documentationUrl =
 		'https://github.com/EskadiaHQ/n8n-nodes-sap-idoc-guard#credential-configuration';

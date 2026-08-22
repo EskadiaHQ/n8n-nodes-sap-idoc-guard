@@ -3,11 +3,12 @@
 Security-first n8n community node for governed SAP IDoc exchange through an
 operated SAP JCo/JIDocLib sidecar.
 
-> **Experimental `0.1.5` node package**: the node contract, test fixture, Java sidecar,
+> **Experimental `0.1.7` node package**: the node contract, test fixture, Java sidecar,
 > tRFC state machine and automated tests are implemented. Licensed SAP JCo
-> 3.1.13 and JIDocLib 3.1.4 have passed a real outbound transport test against
-> A4H client 250. Application processing still requires the approved WE20
-> partner profile and its project-specific process configuration.
+> 3.1.13 and JIDocLib 3.1.4 have passed real outbound transport and application
+> processing against A4H client 250. The configured WE20 profile now processes
+> governed `ORDERS/ORDERS05` messages through process code `ORDE` and valid
+> messages create SD sales orders with application status 53.
 
 ```text
 n8n -> HTTPS -> SAP IDoc Guard sidecar -> JCo/JIDocLib tRFC -> SAP ALE/IDoc
@@ -104,13 +105,16 @@ and minimized backend identity; the node validates and projects those fields.
   external SAP effect. Follow [`docs/SAP-SETUP.md`](docs/SAP-SETUP.md) with an
   approved non-production document and partner.
 
-The operated development acceptance on 2026-08-22 imported four inactive
-examples, verified the synthetic contract end to end, loaded both proprietary
-SAP libraries on target Linux, and created real SAP IDoc `198012` through tRFC.
-A same-key retry returned the original receipt without creating a second IDoc.
-SAP recorded status 56 because the dedicated WE20 partner profile does not yet
-exist; this is an application-configuration gate, not a transport failure. See
-[`jidoc-sidecar/docs/READINESS-REPORT-2026-08-22.md`](jidoc-sidecar/docs/READINESS-REPORT-2026-08-22.md).
+The operated development acceptance on 2026-08-22 loads both proprietary SAP
+libraries on target Linux and verifies the complete asynchronous boundary. The
+initial transport created IDoc `198012`; after configuring `LS/N8NIDOC` in WE20,
+a complete `ORDERS05` created IDoc `198016`, application status 53, and sales
+order `0000000005`. The enterprise bank then created IDocs `198017–198042`: 20
+status-53 business documents and six intentional or configuration-derived
+status-51 cases. Portfolio, replenishment and B2B API retries returned the
+original receipts without creating duplicate SAP IDocs. See
+[`jidoc-sidecar/docs/READINESS-REPORT-2026-08-22.md`](jidoc-sidecar/docs/READINESS-REPORT-2026-08-22.md)
+and the course report `415 - Recursos/PRUEBAS-IDOC-GUARD-EMPRESA-20260822.md`.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
 [`jidoc-sidecar/README.md`](jidoc-sidecar/README.md), and

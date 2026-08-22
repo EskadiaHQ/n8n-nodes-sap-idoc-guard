@@ -28,9 +28,9 @@
         "resource": "outbound",
         "operation": "submit",
         "businessOperationId": "submitPurchaseOrderIdoc",
-        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40><E1EDK01 SEGMENT=\"1\"><ACTION>001</ACTION><CURCY>EUR</CURCY><BELNR>PO-415-IDOC-20260822</BELNR></E1EDK01><E1EDKA1 SEGMENT=\"1\"><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>1</MENGE><MENEE>ST</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>TG11</IDTNR></E1EDP19></E1EDP01></IDOC></ORDERS05>",
-        "idempotencyKey": "A4H250-ORDERS05-20260822-v4",
-        "writeConfirmation": "SEND submitPurchaseOrderIdoc A4H250-ORDERS05-20260822-v4",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40><E1EDK01 SEGMENT=\"1\"><ACTION>001</ACTION></E1EDK01><E1EDK14 SEGMENT=\"1\"><QUALF>006</QUALF><ORGID>00</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>007</QUALF><ORGID>10</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>008</QUALF><ORGID>1710</ORGID></E1EDK14><E1EDK14 SEGMENT=\"1\"><QUALF>012</QUALF><ORGID>OR1</ORGID></E1EDK14><E1EDK03 SEGMENT=\"1\"><IDDAT>002</IDDAT><DATUM>20260915</DATUM></E1EDK03><E1EDKA1 SEGMENT=\"1\"><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDK02 SEGMENT=\"1\"><QUALF>001</QUALF><BELNR>ATLR-DEMO-SINGLE-20260822</BELNR><DATUM>20260822</DATUM></E1EDK02><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>1</MENGE><MENEE>PCE</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>TG11</IDTNR></E1EDP19><E1EDP20 SEGMENT=\"1\"><WMENG>1</WMENG><EDATU>20260915</EDATU></E1EDP20></E1EDP01></IDOC></ORDERS05>",
+        "idempotencyKey": "A4H250-ORDERS05-20260822-v5",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc A4H250-ORDERS05-20260822-v5",
         "correlationId": "a4h250-orders05-outbound"
       },
       "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
@@ -43,7 +43,7 @@
       "parameters": {
         "resource": "status",
         "operation": "get",
-        "statusReference": "A4H250-ORDERS05-20260822-v4",
+        "statusReference": "A4H250-ORDERS05-20260822-v5",
         "correlationId": "a4h250-orders05-status"
       },
       "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "content": "## Controlled A4H/250 example\n\nThis workflow contains one governed `ORDERS/ORDERS05` payload for the non-production client. Attach a dedicated HTTPS credential only after reviewing the partner, port, payload and stable key.\n\nTransport confirmation is not application status 53. Verify the receiver independently in WE02/WE05 and keep this workflow inactive and unavailable in MCP."
+        "content": "## Complete A4H/250 order example\n\nThis workflow contains one governed `ORDERS/ORDERS05` payload with the real customer, sales area, order type, business reference, delivery date and ISO unit used by the test client. The configured WE20 partner processes it immediately.\n\nTransport confirmation is not application status 53. Reconcile the IDoc in WE02/WE05 and the generated order in VA03 by business reference."
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,

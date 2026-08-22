@@ -1,0 +1,79 @@
+{
+  "id": "SapIdocGuardInboundRetry1",
+  "name": "415 · IDoc Guard · CONTRACT · Inbound Retry Decision",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "21fba02c-940c-42bf-a431-0325d3bd4251",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "getDocument",
+        "receiptId": "inbound-002",
+        "correlationId": "contract-inbound-retry-document"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [320, 0],
+      "id": "eb9faef1-c256-45cc-a59f-0da4fec14252",
+      "name": "Read Pending INVOIC02"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "acknowledge",
+        "receiptId": "inbound-002",
+        "ackOutcome": "retry",
+        "ackReason": "Temporary downstream validation dependency",
+        "ackConfirmation": "ACK inbound-002 retry",
+        "correlationId": "contract-inbound-retry-first"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [640, 0],
+      "id": "09bf2ae4-e827-473a-a34c-d722e9234253",
+      "name": "Request Governed Retry"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "acknowledge",
+        "receiptId": "inbound-002",
+        "ackOutcome": "retry",
+        "ackReason": "Temporary downstream validation dependency",
+        "ackConfirmation": "ACK inbound-002 retry",
+        "correlationId": "contract-inbound-retry-duplicate"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [960, 0],
+      "id": "16577498-b0b8-4a97-8658-97cdfa744254",
+      "name": "Repeat Same Retry Decision"
+    },
+    {
+      "parameters": {
+        "content": "## Retry is an explicit business outcome\n\nThis fixture-only example reads one synthetic `INVOIC/INVOIC02`, acknowledges it with outcome `retry` and repeats the exact decision. The second acknowledgement must be idempotent.\n\nA retry requires a reason and the exact confirmation `ACK <receipt> retry`; it is not a blind resend to SAP."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -330],
+      "id": "d496486e-216f-421b-bf8a-b13a7c994255",
+      "name": "Inbound Retry Contract"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Read Pending INVOIC02", "type": "main", "index": 0}]]},
+    "Read Pending INVOIC02": {"main": [[{"node": "Request Governed Retry", "type": "main", "index": 0}]]},
+    "Request Governed Retry": {"main": [[{"node": "Repeat Same Retry Decision", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

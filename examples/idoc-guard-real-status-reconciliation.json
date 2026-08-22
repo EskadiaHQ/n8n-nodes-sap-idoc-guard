@@ -1,0 +1,77 @@
+{
+  "id": "SapIdocGuardRealStatusReconcile1",
+  "name": "415 · IDoc Guard · REAL SAP · Status Reconciliation",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "5c0e7123-9592-45d6-8d51-02a158304231",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "A4H250-ORDERS05-20260822-v4",
+        "correlationId": "a4h250-status-by-business-key"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, -180],
+      "id": "b8f82a8e-95f8-47a3-b9a2-26f8d70c4232",
+      "name": "Find by Idempotency Key"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "383E0458C4206A897921000B",
+        "correlationId": "a4h250-status-by-tid"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, 0],
+      "id": "e290b22a-d5b5-4252-af77-d5d76eea4233",
+      "name": "Find by tRFC TID"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "75fe6c33-4ade-4a6e-8227-e2939b70dff7",
+        "correlationId": "a4h250-status-by-request-id"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, 180],
+      "id": "c09333ad-c6b8-4e3f-a5e3-237e6a794234",
+      "name": "Find by Request ID"
+    },
+    {
+      "parameters": {
+        "content": "## Three references, one governed receipt\n\nThe sidecar can resolve the same stored submission by idempotency key, tRFC TID or request ID. All three branches must return request `75fe6c33-4ade-4a6e-8227-e2939b70dff7` and TID `383E0458C4206A897921000B`.\n\nThis is a read-only transport reconciliation. SAP application status remains an independent receiver-side check."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -390],
+      "id": "b275053c-a05a-4cad-9755-1fe269104235",
+      "name": "Reference Resolution"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [[
+        {"node": "Find by Idempotency Key", "type": "main", "index": 0},
+        {"node": "Find by tRFC TID", "type": "main", "index": 0},
+        {"node": "Find by Request ID", "type": "main", "index": 0}
+      ]]
+    }
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

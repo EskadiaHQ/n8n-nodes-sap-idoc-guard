@@ -1,0 +1,89 @@
+{
+  "id": "SapIdocGuardContractNegative1",
+  "name": "415 · IDoc Guard · CONTRACT · Governance Rejections",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "c9313f36-d8c7-46c0-939a-68f6a4284241",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<IDOCS><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP></EDI_DC40></IDOC></IDOCS>",
+        "idempotencyKey": "CONTRACT-NEGATIVE-ROOT-v1",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc CONTRACT-NEGATIVE-ROOT-v1",
+        "correlationId": "contract-negative-root"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, -210],
+      "id": "667e0bc4-89cf-4724-99cc-f9187f024242",
+      "name": "Reject Wrong XML Root",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP></EDI_DC40><ZSECRET SEGMENT=\"1\"><TOKEN>blocked</TOKEN></ZSECRET></IDOC></ORDERS05>",
+        "idempotencyKey": "CONTRACT-NEGATIVE-SEGMENT-v1",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc CONTRACT-NEGATIVE-SEGMENT-v1",
+        "correlationId": "contract-negative-segment"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, 0],
+      "id": "029c75a3-b8b2-476a-83c6-8c874bda4243",
+      "name": "Reject Unknown Segment",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP></EDI_DC40></IDOC></ORDERS05>",
+        "idempotencyKey": "CONTRACT-NEGATIVE-CONFIRM-v1",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc DIFFERENT-KEY",
+        "correlationId": "contract-negative-confirmation"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [360, 210],
+      "id": "33572941-9839-45ad-991c-2ef13d554244",
+      "name": "Reject Mismatched Confirmation",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Fail closed before SAP\n\nEach branch is intentionally invalid and must return a controlled node error while the workflow continues: wrong XML root, non-allowlisted segment and confirmation/key mismatch.\n\nThe fixture credential never contacts SAP. No idempotency reservation or tRFC transaction should be created for these local validation failures."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -430],
+      "id": "610cdebb-8267-45ac-9ef6-c6f072e54245",
+      "name": "Negative Governance Contract"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [[
+        {"node": "Reject Wrong XML Root", "type": "main", "index": 0},
+        {"node": "Reject Unknown Segment", "type": "main", "index": 0},
+        {"node": "Reject Mismatched Confirmation", "type": "main", "index": 0}
+      ]]
+    }
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

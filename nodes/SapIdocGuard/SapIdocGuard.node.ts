@@ -83,8 +83,8 @@ export class SapIdocGuard implements INodeType {
 		displayName: 'Logali SAP IDoc Guard',
 		name: 'sapIdocGuard',
 		icon: {
-			light: 'file:sapIdocGuard.svg',
-			dark: 'file:sapIdocGuard.dark.svg',
+			light: 'file:sapIdocGuard-v018.svg',
+			dark: 'file:sapIdocGuard-v018.dark.svg',
 		},
 		group: ['input'],
 		version: 1,
