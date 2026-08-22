@@ -1,0 +1,13 @@
+---
+applications:
+  - name: logali-415-idoc-contract
+    path: .
+    memory: 128M
+    disk_quota: 256M
+    instances: 1
+    buildpacks:
+      - nodejs_buildpack
+    command: npm start
+    health-check-type: process
+    env:
+      NODE_ENV: production

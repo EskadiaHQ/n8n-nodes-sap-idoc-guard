@@ -1,0 +1,12 @@
+{
+  "name": "sap-idoc-guard-contract-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test server.test.mjs"
+  }
+}
