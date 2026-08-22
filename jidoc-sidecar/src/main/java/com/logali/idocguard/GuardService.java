@@ -38,7 +38,7 @@ final class GuardService implements AutoCloseable {
     IdocTransport.Backend backend = transport.backend();
     return Map.of(
         "status", "ok",
-        "version", "0.1.3",
+        "version", "0.1.4",
         "capabilities", Map.of(
             "idoc", true,
             "governed", true,

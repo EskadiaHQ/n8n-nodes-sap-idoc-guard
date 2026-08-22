@@ -29,6 +29,18 @@ export class SapIdocGuardApi implements ICredentialType {
 			required: true,
 		},
 		{
+			displayName: 'Token Header',
+			name: 'headerMode',
+			type: 'options',
+			options: [
+				{ name: 'Authorization: Bearer (Private Sidecar)', value: 'bearer' },
+				{ name: 'X-IDoc-Guard-Token (BTP Gateway)', value: 'xIdocGuardToken' },
+			],
+			default: 'bearer',
+			description:
+				'Use only with a compatible BTP gateway, where XSUAA reserves the Authorization bearer header; direct JIDocLib deployment is unsupported',
+		},
+		{
 			displayName: 'Allowed Operations',
 			name: 'allowedOperations',
 			type: 'string',

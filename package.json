@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-sap-idoc-guard",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"description": "Logali SAP IDoc Guard: governed outbound IDocs, status checks and inbound acknowledgements for self-hosted n8n",
 	"license": "MIT",
 	"keywords": [

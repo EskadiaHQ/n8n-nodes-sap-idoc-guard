@@ -87,7 +87,8 @@ SAP usernames and passwords stay in the sidecar secret store.
 - `GET /v1/inbound/{receiptId}/document` (disabled by default)
 - `POST /v1/inbound/{receiptId}/ack`
 
-Every request requires a bearer token and `X-IDoc-Guard-Mode: governed`.
+Every request requires a bearer token (or `X-IDoc-Guard-Token` behind a
+compatible BTP gateway) and `X-IDoc-Guard-Mode: governed`.
 Write bodies also carry an exact confirmation contract. Responses attest
 direction, read/write mode, real-vs-synthetic source, correlation ID, duration,
 and minimized backend identity; the node validates and projects those fields.
@@ -121,3 +122,28 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
 [`SECURITY.md`](SECURITY.md) before deployment. The current development-only
 audit exceptions are recorded transparently in
 [`docs/DEPENDENCY-AUDIT.md`](docs/DEPENDENCY-AUDIT.md).
+
+## SAP BTP Cloud Foundry boundary
+
+Direct deployment of this JIDocLib sidecar on the managed SAP Java buildpack is
+**not supported**. The 2026-08-23 compatibility probe loaded JCo embedding
+5.0.7 but JIDocLib 3.1.4 then required the unavailable internal class
+`com.sap.conn.jco.rt.IServerManager`. SAP also documents that `JCoServer` is
+not available in the BTP managed runtime.
+
+The private `jidoc-sidecar/btp/manifest.yml` and `btp-war` profile are retained
+only as a reproducible compatibility probe. They must not be presented as a
+working deployment. SAP JIDocLib remains licensed software and is never
+committed or published by this repository. The operator supplies it only while
+building the private probe:
+
+```bash
+cd jidoc-sidecar
+mvn -Pbtp-war -Dsap.idoc.lib.dir=/secure/operator/vendor clean test package
+cf push -f btp/manifest.yml # compatibility probe only
+```
+
+The supported choices are the operated private sidecar for outbound and inbound
+IDocs, or SAP Integration Suite's IDoc adapter when BTP mediation is required.
+The custom token-header option exists for a compatible BTP gateway/proxy; it
+does not make direct JIDocLib deployment compatible.

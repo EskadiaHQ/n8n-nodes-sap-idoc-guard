@@ -6,6 +6,9 @@ final class JidocTransport implements IdocTransport {
   private final Object destination;
 
   JidocTransport(Configuration configuration) {
+    if (configuration.usesManagedDestination()) {
+      throw new IllegalStateException("BTP_MANAGED_JIDOC_RUNTIME_UNSUPPORTED");
+    }
     Properties properties = new Properties();
     properties.putAll(configuration.jcoProperties());
     JcoReflection.registerDestinationProvider(configuration.destinationName(), properties);

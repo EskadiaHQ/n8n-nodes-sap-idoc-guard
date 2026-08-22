@@ -42,6 +42,21 @@ describe('sidecar HTTP contract', () => {
 		);
 		assert.equal(captured?.url, 'https://idoc.example.com/v1/health');
 		assert.equal(captured?.headers['X-IDoc-Guard-Mode'], 'governed');
+		assert.equal(captured?.headers.Authorization, `Bearer ${credentials.apiToken}`);
+	});
+
+	it('uses the non-XSUAA token header for a compatible SAP BTP gateway', async () => {
+		let captured: IdocGuardRequestOptions | undefined;
+		await testSidecarConnection(
+			{ ...credentials, headerMode: 'xIdocGuardToken' },
+			async (options) => {
+				captured = options;
+				return { status: 'ok' };
+			},
+			'trace-btp',
+		);
+		assert.equal(captured?.headers['X-IDoc-Guard-Token'], credentials.apiToken);
+		assert.equal(captured?.headers.Authorization, undefined);
 	});
 
 	it('submits only to the governed outbound alias and carries no SAP password', async () => {

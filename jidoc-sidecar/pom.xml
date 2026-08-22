@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.logali</groupId>
   <artifactId>sap-idoc-guard-sidecar</artifactId>
-  <version>0.1.3</version>
+  <version>0.1.4</version>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +23,12 @@
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.1.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <build>
@@ -54,4 +60,36 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>btp-war</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.4.0</version>
+            <executions>
+              <execution>
+                <id>btp-war</id>
+                <phase>package</phase>
+                <goals><goal>war</goal></goals>
+                <configuration>
+                  <warName>sap-idoc-guard-sidecar</warName>
+                  <failOnMissingWebXml>false</failOnMissingWebXml>
+                  <webResources>
+                    <resource>
+                      <directory>${sap.idoc.lib.dir}</directory>
+                      <targetPath>WEB-INF/lib</targetPath>
+                      <includes><include>sapidoc3.jar</include></includes>
+                    </resource>
+                  </webResources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

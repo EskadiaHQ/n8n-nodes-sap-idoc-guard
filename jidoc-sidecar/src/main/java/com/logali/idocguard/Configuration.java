@@ -1,5 +1,6 @@
 package com.logali.idocguard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ record Configuration(
 ) {
   static Configuration fromEnvironment() {
     Map<String, String> env = System.getenv();
-    String token = require(env, "IDOC_GUARD_API_TOKEN");
+    String token = resolveApiToken(env);
     if (token.length() < 32) {
       throw new IllegalArgumentException("IDOC_GUARD_API_TOKEN must contain at least 32 characters");
     }
@@ -38,25 +39,32 @@ record Configuration(
     if (!outbound && !inbound) {
       throw new IllegalArgumentException("Enable at least one governed IDoc direction");
     }
+    boolean managedDestination = bool(env, "SAP_USE_MANAGED_DESTINATION", false);
+    if (managedDestination && inbound) {
+      throw new IllegalArgumentException(
+          "Inbound JCoServer mode is not supported by the SAP BTP JCo runtime");
+    }
 
     Map<String, String> jco = new LinkedHashMap<>();
-    put(jco, "jco.client.ashost", env.get("SAP_ASHOST"));
-    put(jco, "jco.client.sysnr", env.get("SAP_SYSNR"));
-    put(jco, "jco.client.client", env.get("SAP_CLIENT"));
-    put(jco, "jco.client.user", env.get("SAP_USER"));
-    put(jco, "jco.client.passwd", env.get("SAP_PASSWORD"));
-    put(jco, "jco.client.lang", env.getOrDefault("SAP_LANG", "EN"));
-    put(jco, "jco.client.mshost", env.get("SAP_MSHOST"));
-    put(jco, "jco.client.r3name", env.get("SAP_R3NAME"));
-    put(jco, "jco.client.group", env.get("SAP_GROUP"));
-    put(jco, "jco.destination.pool_capacity", env.getOrDefault("SAP_POOL_CAPACITY", "3"));
-    put(jco, "jco.destination.peak_limit", env.getOrDefault("SAP_PEAK_LIMIT", "10"));
-    put(jco, "jco.client.snc_mode", env.get("SAP_SNC_MODE"));
-    put(jco, "jco.client.snc_partnername", env.get("SAP_SNC_PARTNERNAME"));
-    put(jco, "jco.client.snc_qop", env.get("SAP_SNC_QOP"));
-    put(jco, "jco.client.snc_myname", env.get("SAP_SNC_MYNAME"));
-    put(jco, "jco.client.snc_lib", env.get("SAP_SNC_LIB"));
-    if (outbound || inbound) validateDestination(jco);
+    if (!managedDestination) {
+      put(jco, "jco.client.ashost", env.get("SAP_ASHOST"));
+      put(jco, "jco.client.sysnr", env.get("SAP_SYSNR"));
+      put(jco, "jco.client.client", env.get("SAP_CLIENT"));
+      put(jco, "jco.client.user", env.get("SAP_USER"));
+      put(jco, "jco.client.passwd", env.get("SAP_PASSWORD"));
+      put(jco, "jco.client.lang", env.getOrDefault("SAP_LANG", "EN"));
+      put(jco, "jco.client.mshost", env.get("SAP_MSHOST"));
+      put(jco, "jco.client.r3name", env.get("SAP_R3NAME"));
+      put(jco, "jco.client.group", env.get("SAP_GROUP"));
+      put(jco, "jco.destination.pool_capacity", env.getOrDefault("SAP_POOL_CAPACITY", "3"));
+      put(jco, "jco.destination.peak_limit", env.getOrDefault("SAP_PEAK_LIMIT", "10"));
+      put(jco, "jco.client.snc_mode", env.get("SAP_SNC_MODE"));
+      put(jco, "jco.client.snc_partnername", env.get("SAP_SNC_PARTNERNAME"));
+      put(jco, "jco.client.snc_qop", env.get("SAP_SNC_QOP"));
+      put(jco, "jco.client.snc_myname", env.get("SAP_SNC_MYNAME"));
+      put(jco, "jco.client.snc_lib", env.get("SAP_SNC_LIB"));
+      validateDestination(jco);
+    }
 
     int maxSegments = integer(env, "IDOC_GUARD_MAX_SEGMENTS", 500, 1, 10_000);
     IdocPolicy policy = new IdocPolicy(
@@ -79,7 +87,8 @@ record Configuration(
         integer(env, "IDOC_INBOUND_MAX_BYTES", 1_048_576, 1_024, 5_242_880));
     inboundPolicy.validateConfiguration();
 
-    String destinationName = env.getOrDefault("SAP_DESTINATION_NAME", "SAP_IDOC_GUARD");
+    String destinationName = env.getOrDefault("SAP_DESTINATION_NAME", "SAP_IDOC_GUARD").trim();
+    if (destinationName.isBlank()) throw new IllegalArgumentException("SAP_DESTINATION_NAME is required");
     Map<String, String> server = new LinkedHashMap<>();
     if (inbound) {
       put(server, "jco.server.gwhost", require(env, "SAP_GWHOST"));
@@ -111,6 +120,32 @@ record Configuration(
         Map.copyOf(jco),
         env.getOrDefault("SAP_SERVER_NAME", "SAP_IDOC_GUARD_SERVER"),
         Map.copyOf(server));
+  }
+
+  boolean usesManagedDestination() { return jcoProperties.isEmpty(); }
+
+  static String resolveApiToken(Map<String, String> env) {
+    String direct = env.get("IDOC_GUARD_API_TOKEN");
+    if (direct != null && !direct.isBlank()) return direct;
+    String services = env.get("VCAP_SERVICES");
+    if (services != null && !services.isBlank()) {
+      try {
+        var root = new ObjectMapper().readTree(services);
+        var groups = root.elements();
+        while (groups.hasNext()) {
+          var group = groups.next();
+          if (!group.isArray()) continue;
+          for (var binding : group) {
+            var value = binding.path("credentials").path("idocGuardApiToken");
+            if (value.isTextual() && !value.asText().isBlank()) return value.asText();
+          }
+        }
+      } catch (Exception error) {
+        throw new IllegalArgumentException("VCAP_SERVICES contains invalid JSON", error);
+      }
+    }
+    throw new IllegalArgumentException(
+        "IDOC_GUARD_API_TOKEN or a bound idocGuardApiToken credential is required");
   }
 
   private static void validateDestination(Map<String, String> properties) {

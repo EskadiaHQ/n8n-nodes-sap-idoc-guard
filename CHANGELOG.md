@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.9 - 2026-08-23
+
+- Add an opt-in `X-IDoc-Guard-Token` credential mode for a compatible BTP
+  gateway, where XSUAA reserves the standard Authorization bearer header.
+- Add a reproducible outbound-only compatibility probe for the SAP Java
+  buildpack while keeping JIDocLib outside version control.
+- Document the verified incompatibility between JIDocLib 3.1.4 and BTP's
+  managed JCo 5 runtime; the probe is not a supported deployment. Keep direct
+  IDoc transport on the private sidecar or use SAP Integration Suite.
+- Reject inbound JCoServer mode in BTP, which SAP does not support.
+
 ## 0.1.8 - 2026-08-22
 
 - Adopt the approved high-resolution Logali Guard family artwork for the IDoc node and credential.

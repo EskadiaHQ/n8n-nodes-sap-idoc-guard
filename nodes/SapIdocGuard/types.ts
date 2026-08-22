@@ -18,6 +18,7 @@ export interface IdocOperationPolicy {
 export interface SapIdocGuardCredentials {
 	baseUrl: string;
 	apiToken: string;
+	headerMode?: 'bearer' | 'xIdocGuardToken';
 	allowedOperations: string;
 	operationPoliciesJson: string;
 	allowOutboundSubmission?: boolean;

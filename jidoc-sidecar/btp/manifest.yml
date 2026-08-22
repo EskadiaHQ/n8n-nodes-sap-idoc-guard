@@ -1,0 +1,37 @@
+---
+# Compatibility probe only. See README.md; direct JIDocLib deployment on the
+# managed BTP JCo runtime is not supported.
+applications:
+  - name: btp-idoc-guard-415
+    path: ../target/sap-idoc-guard-sidecar.war
+    memory: 768M
+    disk_quota: 1G
+    instances: 1
+    buildpacks:
+      - sap_java_buildpack_jakarta
+    health-check-type: process
+    env:
+      USE_JCO: "true"
+      SAP_USE_MANAGED_DESTINATION: "true"
+      SAP_DESTINATION_NAME: S4HANA_2025_A4H_RFC
+      IDOC_GUARD_STATE_DIR: /tmp/sap-idoc-guard
+      IDOC_GUARD_ENABLE_OUTBOUND: "true"
+      IDOC_GUARD_ENABLE_INBOUND: "false"
+      IDOC_GUARD_ENABLE_INBOUND_PAYLOAD_READ: "false"
+      IDOC_GUARD_REQUEST_TIMEOUT_SECONDS: 60
+      IDOC_GUARD_MAX_BODY_BYTES: 262144
+      IDOC_GUARD_MAX_SEGMENTS: 500
+      IDOC_OUTBOUND_OPERATION: submitPurchaseOrderIdoc
+      IDOC_MESSAGE_TYPE: ORDERS
+      IDOC_BASIC_TYPE: ORDERS05
+      IDOC_SENDER_PARTNER_TYPE: LS
+      IDOC_SENDER_PARTNER: N8NIDOC
+      IDOC_RECEIVER_PARTNER_TYPE: LS
+      IDOC_RECEIVER_PARTNER: A4HCLNT250
+      IDOC_RECEIVER_PORT: SAPA4H
+      IDOC_ALLOWED_SEGMENTS: EDI_DC40,E1EDK01,E1EDK14,E1EDK03,E1EDKA1,E1EDK02,E1EDP01,E1EDP19,E1EDP20
+    services:
+      - destination-415-guard
+      - connectivity-415-guard
+      - xsuaa-415-guard
+      - idoc-guard-secrets-415
