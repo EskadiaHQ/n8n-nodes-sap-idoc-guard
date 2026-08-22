@@ -1,0 +1,31 @@
+services:
+  sap-idoc-guard:
+    build: .
+    image: logali/sap-idoc-guard-sidecar:0.1.3
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - /srv/sap-idoc-guard/vendor:/opt/sap/idoc:ro
+      - /srv/sap-idoc-guard/secrets/idoc-guard-keystore.p12:/run/secrets/idoc-guard-keystore.p12:ro
+      - sap-idoc-guard-state:/var/lib/sap-idoc-guard
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    expose:
+      - "8080"
+    networks:
+      - n8n_private
+      - sap_egress
+
+volumes:
+  sap-idoc-guard-state:
+
+networks:
+  n8n_private:
+    external: true
+  sap_egress:
+    external: true

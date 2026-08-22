@@ -1,0 +1,84 @@
+{
+	"name": "n8n-nodes-sap-idoc-guard",
+	"version": "0.1.5",
+	"description": "Logali SAP IDoc Guard: governed outbound IDocs, status checks and inbound acknowledgements for self-hosted n8n",
+	"license": "MIT",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"sap",
+		"idoc",
+		"ale",
+		"jco",
+		"jidoclib",
+		"sidecar"
+	],
+	"author": {
+		"name": "Logali Group",
+		"email": "admin@logaligroup.com",
+		"url": "https://logaligroup.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/EskadiaHQ/n8n-nodes-sap-idoc-guard.git"
+	},
+	"homepage": "https://github.com/EskadiaHQ/n8n-nodes-sap-idoc-guard#readme",
+	"bugs": {
+		"url": "https://github.com/EskadiaHQ/n8n-nodes-sap-idoc-guard/issues"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true,
+		"tag": "next"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"test": "npm run test:node && npm run test:contract",
+		"test:node": "tsx --test test/**/*.test.ts",
+		"test:contract": "node --test contract-sidecar/server.test.mjs",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist/credentials",
+		"dist/nodes/SapIdocGuard",
+		"examples",
+		"docs",
+		"CHANGELOG.md",
+		"LICENSE.md",
+		"ROADMAP.md",
+		"README.md",
+		"SECURITY.md"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": false,
+		"credentials": [
+			"dist/credentials/SapIdocGuardApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/SapIdocGuard/SapIdocGuard.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.44.5",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"tsx": "4.20.6",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"peerDependenciesMeta": {
+		"n8n-workflow": {
+			"optional": true
+		}
+	}
+}

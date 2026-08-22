@@ -1,0 +1,13 @@
+{
+	"node": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Data & Storage", "Development"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/EskadiaHQ/n8n-nodes-sap-idoc-guard#operations"
+			}
+		]
+	}
+}

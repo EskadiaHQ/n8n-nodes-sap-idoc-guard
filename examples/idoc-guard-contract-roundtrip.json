@@ -1,0 +1,62 @@
+{
+  "id": "SapIdocGuardContract1",
+  "name": "415 · IDoc Guard · CONTRACT · Outbound and Status",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "dc79d563-53c6-4609-9dd2-c0d79d8c7351",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPRT>LS</SNDPRT><SNDPRN>N8N</SNDPRN><RCVPRT>LS</RCVPRT><RCVPRN>S4DCLNT100</RCVPRN><RCVPOR>S4DCLNT100</RCVPOR></EDI_DC40><E1EDK01 SEGMENT=\"1\"><BELNR>4500001234</BELNR><CURCY>EUR</CURCY></E1EDK01><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>2</MENGE><MENEE>EA</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>MAT-1000</IDTNR></E1EDP19></E1EDP01></IDOC></ORDERS05>",
+        "idempotencyKey": "CONTRACT-PO-4500001234-v2",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc CONTRACT-PO-4500001234-v2",
+        "correlationId": "contract-idoc-outbound"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [320, 0],
+      "id": "4eea62e3-533d-4e95-a4ca-fd260404418a",
+      "name": "Submit Synthetic ORDERS05"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "CONTRACT-PO-4500001234-v2",
+        "correlationId": "contract-idoc-status"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [620, 0],
+      "id": "029f44cf-756a-4683-a1fb-38bc17963e2d",
+      "name": "Read Synthetic Transport Status"
+    },
+    {
+      "parameters": {
+        "content": "## Synthetic contract test only\n\nStart `contract-sidecar`, create a dedicated insecure-HTTP fixture credential, and attach it to both nodes. The workflow sends no SAP traffic. Execute twice: the second run must return the same receipt with `duplicate: true`.\n\nNever copy the fixture token or insecure HTTP setting to a real credential."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -300],
+      "id": "d460be9a-b10d-4bfb-bc00-20e0224e1645",
+      "name": "Fixture Safety Contract"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Submit Synthetic ORDERS05", "type": "main", "index": 0}]]},
+    "Submit Synthetic ORDERS05": {"main": [[{"node": "Read Synthetic Transport Status", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

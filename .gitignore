@@ -1,0 +1,11 @@
+dist/
+node_modules/
+*.tgz
+*.tsbuildinfo
+.DS_Store
+jidoc-sidecar/lib/
+jidoc-sidecar/runtime/
+jidoc-sidecar/target/
+jidoc-sidecar/vendor/
+jidoc-sidecar/.env
+jidoc-sidecar/docs/READINESS-REPORT-*.md

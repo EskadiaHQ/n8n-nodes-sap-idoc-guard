@@ -1,0 +1,75 @@
+{
+  "id": "SapIdocGuardInboundLifecycle1",
+  "name": "415 · IDoc Guard · CONTRACT · Inbound Lifecycle",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "a1f8eeaf-5c22-4f1c-849f-369f2333554a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "connection",
+        "operation": "testConnection",
+        "correlationId": "contract-idoc-health"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [300, 0],
+      "id": "f60569c0-2fd8-4fd9-b97f-faa1fd512bd6",
+      "name": "Verify Governed Fixture"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "getDocument",
+        "receiptId": "inbound-001",
+        "correlationId": "contract-idoc-inbound-document"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "id": "52b6c568-1d4c-44a7-ae0e-8afbc346322b",
+      "name": "Read Synthetic Inbound Document"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "acknowledge",
+        "receiptId": "inbound-001",
+        "ackOutcome": "accepted",
+        "ackReason": "",
+        "ackConfirmation": "ACK inbound-001 accepted",
+        "correlationId": "contract-idoc-inbound-ack"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [920, 0],
+      "id": "4832bb73-e354-416c-a642-4783bf21faea",
+      "name": "Acknowledge Synthetic Inbound IDoc"
+    },
+    {
+      "parameters": {
+        "content": "## Synthetic inbound lifecycle\n\nThis fixture-only workflow proves authenticated health, explicit raw-payload access and an exact acknowledgement. It never contacts SAP. Run it twice: the second acknowledgement must return `duplicate: true`.\n\nThe credential is deliberately isolated, allows insecure HTTP only on the private Docker network and must never be reused with a SAP-connected sidecar."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -320],
+      "id": "ba4cb733-10f6-4589-a0f0-c88e7ee0cab3",
+      "name": "Fixture Lifecycle Contract"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Verify Governed Fixture", "type": "main", "index": 0}]]},
+    "Verify Governed Fixture": {"main": [[{"node": "Read Synthetic Inbound Document", "type": "main", "index": 0}]]},
+    "Read Synthetic Inbound Document": {"main": [[{"node": "Acknowledge Synthetic Inbound IDoc", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

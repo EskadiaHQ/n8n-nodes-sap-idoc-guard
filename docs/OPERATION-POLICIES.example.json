@@ -1,0 +1,26 @@
+{
+  "submitPurchaseOrderIdoc": {
+    "direction": "outbound",
+    "messageType": "ORDERS",
+    "basicType": "ORDERS05",
+    "allowedSegments": ["EDI_DC40", "E1EDK01", "E1EDKA1", "E1EDP01", "E1EDP19"],
+    "maxSegments": 200,
+    "outputFields": ["requestId", "idempotencyKey", "tid", "docnum", "status", "duplicate"]
+  },
+  "getIdocStatus": {
+    "direction": "status",
+    "outputFields": ["requestId", "idempotencyKey", "docnum", "messageType", "basicType", "status", "statusHistory"]
+  },
+  "listInboundIdocs": {
+    "direction": "inbound-read",
+    "outputFields": ["receiptId", "docnum", "messageType", "basicType", "senderPartner", "correlationId", "payloadDigest", "status", "receivedAt"]
+  },
+  "getInboundIdoc": {
+    "direction": "inbound-payload",
+    "outputFields": ["receiptId", "docnum", "messageType", "basicType", "senderPartner", "payloadDigest", "idocXml"]
+  },
+  "acknowledgeInboundIdoc": {
+    "direction": "inbound-ack",
+    "outputFields": ["receiptId", "outcome", "status", "duplicate"]
+  }
+}

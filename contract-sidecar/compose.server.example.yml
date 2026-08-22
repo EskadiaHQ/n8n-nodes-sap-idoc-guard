@@ -1,0 +1,32 @@
+services:
+  sap-idoc-guard-contract:
+    build:
+      context: .
+    image: logali-sap-idoc-guard-contract:0.1.0
+    container_name: sap-idoc-guard-contract
+    restart: unless-stopped
+    env_file:
+      - .env
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "fetch('http://127.0.0.1:8080/v1/health',{headers:{authorization:'Bearer '+process.env.CONTRACT_TOKEN,'x-idoc-guard-mode':'governed'}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    networks:
+      - n8n_backend
+
+networks:
+  n8n_backend:
+    external: true
+    name: logali_n8n_restore_backend

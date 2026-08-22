@@ -1,0 +1,75 @@
+{
+  "id": "SapIdocGuardRealOutbound1",
+  "name": "415 · IDoc Guard · REAL SAP · Approved Outbound Template",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "bc5c405b-32ed-4d4b-9097-09eab8c58d1c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "connection",
+        "operation": "testConnection",
+        "correlationId": "a4h250-idoc-health"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [300, 0],
+      "id": "6b2b247b-292d-4c26-83a1-63954154dbd4",
+      "name": "Verify A4H IDoc Runtime"
+    },
+    {
+      "parameters": {
+        "resource": "outbound",
+        "operation": "submit",
+        "businessOperationId": "submitPurchaseOrderIdoc",
+        "idocXml": "<ORDERS05><IDOC BEGIN=\"1\"><EDI_DC40 SEGMENT=\"1\"><TABNAM>EDI_DC40</TABNAM><DIRECT>2</DIRECT><DOCNUM></DOCNUM><MESTYP>ORDERS</MESTYP><IDOCTYP>ORDERS05</IDOCTYP><CIMTYP></CIMTYP><SNDPOR>N8NIDOC</SNDPOR><SNDPRT>LS</SNDPRT><SNDPRN>N8NIDOC</SNDPRN><RCVPOR>SAPA4H</RCVPOR><RCVPRT>LS</RCVPRT><RCVPRN>A4HCLNT250</RCVPRN></EDI_DC40><E1EDK01 SEGMENT=\"1\"><ACTION>001</ACTION><CURCY>EUR</CURCY><BELNR>PO-415-IDOC-20260822</BELNR></E1EDK01><E1EDKA1 SEGMENT=\"1\"><PARVW>AG</PARVW><PARTN>0017100001</PARTN></E1EDKA1><E1EDP01 SEGMENT=\"1\"><POSEX>000010</POSEX><MENGE>1</MENGE><MENEE>ST</MENEE><E1EDP19 SEGMENT=\"1\"><QUALF>002</QUALF><IDTNR>TG11</IDTNR></E1EDP19></E1EDP01></IDOC></ORDERS05>",
+        "idempotencyKey": "A4H250-ORDERS05-20260822-v4",
+        "writeConfirmation": "SEND submitPurchaseOrderIdoc A4H250-ORDERS05-20260822-v4",
+        "correlationId": "a4h250-orders05-outbound"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "id": "de585bbd-e7cf-4a8e-89d8-35004dcd6b7d",
+      "name": "Submit Approved IDoc"
+    },
+    {
+      "parameters": {
+        "resource": "status",
+        "operation": "get",
+        "statusReference": "A4H250-ORDERS05-20260822-v4",
+        "correlationId": "a4h250-orders05-status"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [900, 0],
+      "id": "e2e9a3c9-e1ee-42db-b598-8558dbd9a151",
+      "name": "Read Governed Transport Status"
+    },
+    {
+      "parameters": {
+        "content": "## Controlled A4H/250 example\n\nThis workflow contains one governed `ORDERS/ORDERS05` payload for the non-production client. Attach a dedicated HTTPS credential only after reviewing the partner, port, payload and stable key.\n\nTransport confirmation is not application status 53. Verify the receiver independently in WE02/WE05 and keep this workflow inactive and unavailable in MCP."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -300],
+      "id": "03e4df54-8899-485b-b82b-c922d4706774",
+      "name": "Real SAP Safety Gate"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Verify A4H IDoc Runtime", "type": "main", "index": 0}]]},
+    "Verify A4H IDoc Runtime": {"main": [[{"node": "Submit Approved IDoc", "type": "main", "index": 0}]]},
+    "Submit Approved IDoc": {"main": [[{"node": "Read Governed Transport Status", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

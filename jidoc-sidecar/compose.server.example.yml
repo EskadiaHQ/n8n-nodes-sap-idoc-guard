@@ -1,0 +1,39 @@
+name: logali-sap-idoc-guard
+
+services:
+  sap-idoc-guard:
+    image: logali-sap-idoc-guard-sidecar:0.1.3
+    container_name: sap-idoc-guard-jco
+    restart: unless-stopped
+    env_file:
+      - /srv/logali/secrets/sap-idoc-guard.env
+    volumes:
+      - /srv/logali/vendor/sap-jco:/opt/sap/idoc:ro
+      - /srv/logali/tls/sap-idoc-guard-jco/server.p12:/run/secrets/sap-idoc-guard-server.p12:ro
+      - sap-idoc-guard-state:/var/lib/sap-idoc-guard
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    expose:
+      - "8080"
+    networks:
+      - n8n_backend
+      - sap_egress
+
+volumes:
+  sap-idoc-guard-state:
+
+networks:
+  n8n_backend:
+    external: true
+    name: logali_n8n_restore_backend
+  sap_egress:
+    external: true
+    name: logali_sap_rfc_egress

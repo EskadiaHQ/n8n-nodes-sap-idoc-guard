@@ -1,0 +1,46 @@
+{
+  "id": "SapIdocGuardInboundTriage1",
+  "name": "415 · IDoc Guard · Governed Inbound Triage",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "fb0d5094-b9ad-4448-b818-15b92eaa84fa",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "inbound",
+        "operation": "getMany",
+        "limit": 25,
+        "cursor": "",
+        "correlationId": "inbound-idoc-triage"
+      },
+      "type": "n8n-nodes-sap-idoc-guard.sapIdocGuard",
+      "typeVersion": 1,
+      "position": [340, 0],
+      "id": "43d04f0e-d51c-4372-b98f-c92cd9e32327",
+      "name": "List Pending Inbound IDocs"
+    },
+    {
+      "parameters": {
+        "content": "## Read-only triage\n\nThis workflow lists minimized metadata and never returns raw IDoc XML. Review downstream business processing before adding a separate acknowledgement step. AI Tool use can list, but cannot acknowledge.\n\nKeep inactive and unavailable in MCP."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -260],
+      "id": "2486ec71-fddf-447f-a4ed-10b8b68543f1",
+      "name": "Inbound Data Boundary"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "List Pending Inbound IDocs", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "availableInMCP": false},
+  "pinData": {},
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}
