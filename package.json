@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-sap-idoc-guard",
-	"version": "0.1.9",
+	"version": "0.1.10",
 	"description": "Logali SAP IDoc Guard: governed outbound IDocs, status checks and inbound acknowledgements for self-hosted n8n",
 	"license": "MIT",
 	"keywords": [
@@ -35,6 +35,7 @@
 		"tag": "next"
 	},
 	"scripts": {
+		"audit:prod": "npm audit --omit=dev",
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
@@ -69,6 +70,7 @@
 	"devDependencies": {
 		"@n8n/node-cli": "0.44.5",
 		"eslint": "9.32.0",
+		"n8n-workflow": "2.14.1",
 		"prettier": "3.6.2",
 		"tsx": "4.20.6",
 		"typescript": "5.9.2"
