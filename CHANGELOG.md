@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.10 - 2026-08-23
+
+- Declare the n8n workflow runtime explicitly as a development dependency so
+  npm does not materialize the optional peer as a production dependency during
+  package validation.
+- Add a production-only dependency audit gate; the published node remains
+  host-provided and ships with zero bundled production dependencies.
+
 ## 0.1.9 - 2026-08-23
 
 - Add an opt-in `X-IDoc-Guard-Token` credential mode for a compatible BTP
