@@ -3,7 +3,7 @@
 Security-first n8n community node for governed SAP IDoc exchange through an
 operated SAP JCo/JIDocLib sidecar.
 
-> **Experimental `0.1.7` node package**: the node contract, test fixture, Java sidecar,
+> **Experimental `0.1.x` node package**: the node contract, test fixture, Java sidecar,
 > tRFC state machine and automated tests are implemented. Licensed SAP JCo
 > 3.1.13 and JIDocLib 3.1.4 have passed real outbound transport and application
 > processing against A4H client 250. The configured WE20 profile now processes
