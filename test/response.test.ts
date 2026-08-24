@@ -49,6 +49,14 @@ describe('sidecar response governance', () => {
 			() => sanitizeHealthResponse({ status: 'ok', capabilities: { idoc: false } }),
 			/does not advertise governed IDoc/,
 		);
+		assert.throws(
+			() =>
+				sanitizeHealthResponse({
+					status: 'degraded',
+					capabilities: { idoc: true, governed: true },
+				}),
+			/did not report a healthy status/,
+		);
 	});
 
 	it('projects raw inbound XML only through the dedicated payload response', () => {

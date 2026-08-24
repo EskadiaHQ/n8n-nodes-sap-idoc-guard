@@ -38,6 +38,13 @@ function safeBackend(value: unknown): Record<string, string> | undefined {
 	return { systemId, client, release };
 }
 
+function assertHealthyStatus(response: Record<string, unknown>): 'ok' | 'healthy' {
+	if (response.status !== 'ok' && response.status !== 'healthy') {
+		throw new OperationalError('The configured sidecar did not report a healthy status.');
+	}
+	return response.status;
+}
+
 function assertEvidence(
 	response: Record<string, unknown>,
 	direction: IdocDirection,
@@ -88,6 +95,7 @@ function evidenceMetadata(
 
 export function sanitizeHealthResponse(value: unknown): Record<string, unknown> {
 	const response = asRecord(value, 'Sidecar health response');
+	const status = assertHealthyStatus(response);
 	const capabilities = asRecord(response.capabilities, 'Sidecar capabilities');
 	if (capabilities.idoc !== true || capabilities.governed !== true) {
 		throw new OperationalError('The configured sidecar does not advertise governed IDoc capability.');
@@ -99,8 +107,8 @@ export function sanitizeHealthResponse(value: unknown): Record<string, unknown> 
 		: [];
 	const backend = safeBackend(response.backend);
 	return {
-		connected: response.status === 'ok' || response.status === 'healthy',
-		status: String(response.status ?? 'unknown'),
+		connected: true,
+		status,
 		service: String(response.service ?? 'sap-idoc-guard-sidecar'),
 		version: String(response.version ?? 'unknown'),
 		idoc: true,

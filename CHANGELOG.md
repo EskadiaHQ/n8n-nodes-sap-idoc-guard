@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.11 - 2026-08-23
+
+- Fail closed when the sidecar reports a degraded, missing, or otherwise
+  unhealthy status during credential checks and runtime connection tests.
+- Add regression coverage so governed capabilities alone cannot make an
+  unhealthy sidecar appear connected.
+
 ## 0.1.10 - 2026-08-23
 
 - Declare the n8n workflow runtime explicitly as a development dependency so
