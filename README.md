@@ -50,6 +50,19 @@ business IDoc. Production rollout therefore needs an application-level evidence
 design such as ALEAUD, a business response IDoc, or a governed receiver-side
 status integration.
 
+## Install the stable node
+
+```bash
+npm install n8n-nodes-sap-idoc-guard
+```
+
+Self-hosted n8n must be configured to load community packages. The npm package
+does not redistribute SAP JCo, JIDocLib, native libraries, SAP credentials, or
+the operated sidecar.
+
+The validation and publication evidence for the current security hardening is
+recorded in [`docs/RELEASE-VERIFICATION-2026-08-24.md`](docs/RELEASE-VERIFICATION-2026-08-24.md).
+
 ## Install for local evaluation
 
 ```bash
@@ -58,9 +71,6 @@ npm test
 npm run lint
 npm run build
 ```
-
-The npm package installs only the n8n node. It does not redistribute SAP JCo,
-JIDocLib, native libraries, SAP credentials, or the operated sidecar.
 
 ## Credential policy
 
